@@ -59,6 +59,7 @@ class Qwen2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                 ";}",
                 ";}\u010a",
                 "\u00cf\u0135",
+                "##",
             ]
         )
 
@@ -75,6 +76,7 @@ class Qwen2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             "; }",
             ";} \u010a",
             "\u00cf \u0135",
+            "# #",
         ]
 
         self.special_tokens_map = {"eos_token": "<|endoftext|>"}
@@ -98,14 +100,15 @@ class Qwen2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # this case should cover
         # - NFC normalization (code point U+03D3 has different normalization forms under NFC, NFD, NFKC, and NFKD)
         # - the pretokenization rules (spliting digits and merging symbols with \n\r)
-        input_text = "lower lower newer 010;}\n<|endoftext|>\u03d2\u0301"
-        output_text = "lower lower newer 010;}\n<|endoftext|>\u03d3"
+        input_text = "##lower lower newer 010;}\n<|endoftext|>\u03d2\u0301"
+        output_text = "##lower lower newer 010;}\n<|endoftext|>\u03d3"
         return input_text, output_text
 
     def test_python_full_tokenizer(self):
         tokenizer = self.get_tokenizer()
         sequence, _ = self.get_input_output_texts(tokenizer)
         bpe_tokens = [
+            "##",
             "l",
             "o",
             "w",
@@ -129,7 +132,7 @@ class Qwen2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         self.assertListEqual(tokens, bpe_tokens)
 
         input_tokens = tokens
-        input_bpe_tokens = [75, 78, 86, 260, 259, 260, 220, 77, 68, 86, 260, 220, 15, 16, 15, 266, 268, 267]
+        input_bpe_tokens = [268, 75, 78, 86, 260, 259, 260, 220, 77, 68, 86, 260, 220, 15, 16, 15, 266, 269, 267]
         self.assertListEqual(tokenizer.convert_tokens_to_ids(input_tokens), input_bpe_tokens)
 
     @unittest.skip("We disable the test of pretokenization as it is not reversible.")
@@ -166,7 +169,7 @@ class Qwen2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # tokenizer has a special token: `"<|endfotext|>"` as eos, but it is not `legacy_added_tokens`
         # special tokens in `spaces_between_special_tokens` means spaces between `legacy_added_tokens`
         # that would be `"<|im_start|>"` and `"<|im_end|>"` in Qwen/Qwen2 Models
-        token_ids = [259, 260, 268, 269, 26]
+        token_ids = [259, 260, 269, 270, 26]
         sequence = " lower<|endoftext|><|im_start|>;"
         sequence_with_space = " lower<|endoftext|> <|im_start|> ;"
 
